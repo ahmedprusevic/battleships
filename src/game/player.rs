@@ -1,15 +1,15 @@
-use crate::game::ship::Ship;
+use crate::game::fleet::Fleet;
 
-struct Player {
+pub struct Player {
     name: String,
-    ships: [Ship; 5],
+    fleet: Fleet,
 }
 
 impl Player {
-    fn new(name: &str) -> Player {
+    pub fn new (name: &str, fleet: Fleet) -> Player {
         Player {
             name: name.to_string(),
-            ships: [Ship::new(3), Ship::new(5), Ship::new(4), Ship::new(4), Ship::new(3)],
+            fleet,
         }
     }
 }

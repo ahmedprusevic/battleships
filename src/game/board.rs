@@ -1,3 +1,7 @@
+use std::fmt::Error;
+use crate::game::error::ShipInputError;
+use crate::game::ship::{Position, Ship};
+
 const LETTERS: [&str; 14] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"];
 
 pub struct Board {
@@ -51,5 +55,24 @@ impl Board {
             println!();
         }
     }
+
+    fn place_ship_on_board(&mut self, ship: &Ship) -> Result<bool, ShipInputError> {
+        let starting_point = &ship.position.0;
+        let end_point = &ship.position.1;
+
+        let is_position_valid = check_if_position_is_valid(&starting_point, &end_point);
+
+    }
+}
+
+fn check_if_position_is_valid(position1: &Position, position2: &Position) -> Result<bool, ShipInputError> {
+    if position1.0 == position2.0 {
+        return Ok(true);
+    }
+    if position1.1 == position2.1 {
+        return Ok(true);
+    }
+
+    Err(ShipInputError::InvalidInput)
 }
 

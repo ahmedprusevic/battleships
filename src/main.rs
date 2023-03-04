@@ -1,9 +1,9 @@
+use crate::game::game_controller::GameController;
+
 mod game;
 
-use game::board::Board;
 
 fn main() {
-    let board = Board::new();
+    let game_controller = GameController::new();
 
-    board.display_board();
 }
