@@ -1,8 +1,8 @@
 
 
-pub(crate) struct Position(pub(crate) String,pub(crate) u8);
+pub struct Position(pub String,pub u8);
 
-pub(crate) struct BoardPosition(pub(crate) Position,pub(crate) Position);
+pub struct BoardPosition(pub Position,pub Position);
 
 
 pub struct Ship {
@@ -18,5 +18,9 @@ impl Ship {
             length,
             position
         }
+    }
+
+    pub fn set_ship_position(&mut self, position: BoardPosition) {
+        self.position = position
     }
 }

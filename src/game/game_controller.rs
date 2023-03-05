@@ -1,5 +1,5 @@
 use crate::game::board::Board;
-use crate::game::ship::Ship;
+use crate::game::ship::{BoardPosition, Position, Ship};
 use crate::game::fleet::Fleet;
 use crate::game::player::Player;
 
@@ -21,5 +21,12 @@ impl GameController {
             player2,
             board
         }
+    }
+
+    pub fn start_game(&mut self) {
+        self.board.display_board();
+        self.player1.fleet.ships[0].set_ship_position(BoardPosition(Position(String::from("A"), 1), Position(String::from("C"), 1)));
+        self.board.place_ship_on_board(&self.player1.fleet.ships[0]);
+        self.board.display_board();
     }
 }

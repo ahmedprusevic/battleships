@@ -6,5 +6,8 @@ quick_error! {
         InvalidInput {
             display("The input you entered is invalid")
         }
+        ShipInPath {
+            display("There is ship in specified path")
+        }
     }
 }

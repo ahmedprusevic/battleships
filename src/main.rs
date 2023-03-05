@@ -4,6 +4,6 @@ mod game;
 
 
 fn main() {
-    let game_controller = GameController::new();
-
+    let mut game_controller = GameController::new();
+    game_controller.start_game()
 }

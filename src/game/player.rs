@@ -1,8 +1,8 @@
 use crate::game::fleet::Fleet;
 
 pub struct Player {
-    name: String,
-    fleet: Fleet,
+   pub name: String,
+   pub fleet: Fleet,
 }
 
 impl Player {

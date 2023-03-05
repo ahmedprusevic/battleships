@@ -1,4 +1,3 @@
-use std::fmt::Error;
 use crate::game::error::ShipInputError;
 use crate::game::ship::{Position, Ship};
 
@@ -54,25 +53,51 @@ impl Board {
             }
             println!();
         }
+        println!();
     }
 
-    fn place_ship_on_board(&mut self, ship: &Ship) -> Result<bool, ShipInputError> {
+    pub fn place_ship_on_board(&mut self, ship: &Ship) -> Result<(), ShipInputError> {
         let starting_point = &ship.position.0;
         let end_point = &ship.position.1;
 
-        let is_position_valid = check_if_position_is_valid(&starting_point, &end_point);
+        check_if_position_is_valid(&starting_point, &end_point)?;
 
+        let starting_point_letter_to_idx = LETTERS.iter().position(|&x| x == starting_point.0).unwrap();
+        let end_point_letter_to_idx = LETTERS.iter().position(|&x| x == end_point.0).unwrap();
+
+        let starting_point_num_to_idx = starting_point.1 - 1;
+        let end_point_num_to_idx = end_point.1 - 1;
+
+        match (starting_point_letter_to_idx == end_point_letter_to_idx, starting_point_num_to_idx == end_point_num_to_idx) {
+            (true, false) => {
+                let mut placing_idx = starting_point_num_to_idx as usize;
+                let mut step_num = 1;
+                while step_num <= ship.length as usize {
+                    self.player_1_fields[starting_point_letter_to_idx][placing_idx] = BoardState::Ship;
+                    placing_idx += 1;
+                    step_num += 1;
+                }
+            },
+            (false, true) => {
+                let mut placing_idx = starting_point_letter_to_idx;
+                let mut step_num = 1;
+                while step_num <= ship.length as usize {
+                    self.player_1_fields[placing_idx][starting_point_num_to_idx as usize] = BoardState::Ship;
+                    placing_idx += 1;
+                    step_num += 1;
+                }
+            },
+            _ => unreachable!(),
+        }
+
+        Ok(())
     }
 }
 
-fn check_if_position_is_valid(position1: &Position, position2: &Position) -> Result<bool, ShipInputError> {
-    if position1.0 == position2.0 {
-        return Ok(true);
+fn check_if_position_is_valid(position1: &Position, position2: &Position) -> Result<(), ShipInputError> {
+    match (position1.0 == position2.0, position1.1 == position2.1) {
+        (true, false) | (false, true) => Ok(()),
+        _ => Err(ShipInputError::InvalidInput),
     }
-    if position1.1 == position2.1 {
-        return Ok(true);
-    }
-
-    Err(ShipInputError::InvalidInput)
 }
 
