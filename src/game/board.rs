@@ -53,7 +53,6 @@ impl Board {
             }
             println!();
         }
-        println!();
     }
 
     pub fn place_ship_on_board(&mut self, ship: &Ship) -> Result<(), ShipInputError> {

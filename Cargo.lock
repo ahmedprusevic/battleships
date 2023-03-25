@@ -7,6 +7,7 @@ name = "battleship"
 version = "0.1.0"
 dependencies = [
  "quick-error",
+ "unicode-segmentation",
 ]
 
 [[package]]
@@ -14,3 +15,9 @@ name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dd624098567895118886609431a7c3b8f516e41d30e0643f03d94592a147e36"
