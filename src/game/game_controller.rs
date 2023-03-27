@@ -6,10 +6,13 @@ use crate::game::ship::{BoardPosition, Position, Ship, ShipName};
 use std::io;
 use unicode_segmentation::UnicodeSegmentation;
 
+pub struct CurrentPlayer(pub u8);
+
 pub struct GameController {
     player1: Player,
     player2: Player,
     board: Board,
+    current_player: CurrentPlayer,
 }
 
 impl GameController {
@@ -21,6 +24,7 @@ impl GameController {
             player1,
             player2,
             board,
+            current_player: CurrentPlayer(1),
         }
     }
 
