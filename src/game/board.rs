@@ -1,16 +1,11 @@
 use crate::game::error::ShipInputError;
 use crate::game::game_controller::CurrentPlayer;
 use crate::game::ship::{Position, Ship};
-use std::collections::HashMap;
+use dialoguer::{theme::ColorfulTheme, Select};
 
 const LETTERS: [&str; 14] = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
 ];
-
-const X_POSITIVE: &str = "x-positive";
-const X_NEGATIVE: &str = "x-negative";
-const Y_POSITIVE: &str = "y-positive";
-const Y_NEGATIVE: &str = "y-negative";
 
 pub struct Board {
     pub player_1_fields: [[BoardState; 14]; 14],
@@ -128,51 +123,43 @@ impl Board {
 fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position, ship_length: u8) {
     let starting_point_letter_to_idx = LETTERS.iter().position(|&x| x == position.0).unwrap() as i8;
     let starting_point_num_to_idx = (position.1 - 1) as i8;
-    let mut available_placements = HashMap::new();
+    let mut available_placements = Vec::<String>::new();
 
-    available_placements.insert(
-        X_POSITIVE,
-        format!(
-            "{}{} - {}{}",
-            position.0,
-            position.1,
-            position.0,
-            position.1 + ship_length
-        ),
-    );
+    available_placements.push(format!(
+        "{}{} - {}{}",
+        position.0,
+        position.1,
+        position.0,
+        position.1 + ship_length
+    ));
 
-    available_placements.insert(
-        X_NEGATIVE,
-        format!(
-            "{}{} - {}{}",
-            position.0,
-            position.1,
-            position.0,
-            position.1 - ship_length
-        ),
-    );
+    available_placements.push(format!(
+        "{}{} - {}{}",
+        position.0,
+        position.1,
+        position.0,
+        position.1 - ship_length
+    ));
 
-    available_placements.insert(
-        Y_POSITIVE,
-        format!(
-            "{}{} - {}{}",
-            position.0,
-            position.1,
-            LETTERS[(starting_point_letter_to_idx + ship_length as i8) as usize],
-            position.1
-        ),
-    );
+    available_placements.push(format!(
+        "{}{} - {}{}",
+        position.0,
+        position.1,
+        LETTERS
+            .get((starting_point_letter_to_idx - ship_length as i8) as usize)
+            .unwrap_or(&""),
+        position.1
+    ));
 
-    available_placements.insert(
-        Y_NEGATIVE,
-        format!(
-            "{}{} - {}{}",
-            position.0,
-            position.1,
-            LETTERS[(starting_point_letter_to_idx - ship_length as i8) as usize],
-            position.1
-        ),
-    );
+    available_placements.push(format!(
+        "{}{} - {}{}",
+        position.0,
+        position.1,
+        LETTERS
+            .get((starting_point_letter_to_idx - ship_length as i8) as usize)
+            .unwrap_or(&""),
+        position.1
+    ));
 
     {
         //     x-axis positive
@@ -180,12 +167,12 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
         let possible_last_place = starting_point_num_to_idx + ship_length as i8;
 
         if possible_last_place > 14 {
-            available_placements.insert(X_POSITIVE, String::new());
+            available_placements.remove(0);
         }
 
         while (i <= possible_last_place) && (possible_last_place < 14) {
             if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
-                available_placements.insert(X_POSITIVE, String::new());
+                available_placements.remove(0);
                 break;
             }
             i += 1;
@@ -197,12 +184,12 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
         let possible_last_place: i8 = starting_point_num_to_idx - ship_length as i8;
 
         if possible_last_place < 0 {
-            available_placements.insert(X_NEGATIVE, String::new());
+            available_placements.remove(1);
         }
 
         while (i >= 0) && (possible_last_place >= 0) {
             if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
-                available_placements.insert(X_NEGATIVE, String::new());
+                available_placements.remove(1);
                 break;
             }
             i -= 1;
@@ -214,12 +201,12 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
         let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
 
         if possible_last_place > 14 {
-            available_placements.insert(Y_POSITIVE, String::new());
+            available_placements.remove(2);
         }
 
         while (i <= possible_last_place) && (possible_last_place > 0) {
             if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
-                available_placements.insert(Y_POSITIVE, String::new());
+                available_placements.remove(2);
                 break;
             }
             i += 1;
@@ -231,17 +218,25 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
         let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
 
         if possible_last_place < 0 {
-            available_placements.insert(Y_NEGATIVE, String::new());
+            available_placements.remove(3);
         }
 
         while (i >= 0) && (possible_last_place >= 0) {
             if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
-                available_placements.insert(Y_NEGATIVE, String::new());
+                available_placements.remove(3);
                 break;
             }
             i -= 1;
         }
     }
+
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .items(&available_placements)
+        .default(0)
+        .interact()
+        .unwrap();
+
+    println!("The selected field is {}", available_placements[selection])
 }
 
 fn check_if_position_is_valid(

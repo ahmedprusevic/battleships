@@ -37,8 +37,13 @@ impl GameController {
             println!("Please enter a ship 🚢 position please take note that you are currently placing {:?} , who has length of {}", self.player1.fleet.ships[current_ship].name, self.player1.fleet.ships[current_ship].length);
 
             let first_position = take_position();
-            let second_position = take_position();
+            self.board.calculate_available_positions(
+                &first_position,
+                self.player1.fleet.ships[current_ship].length,
+                &self.current_player,
+            );
 
+            let second_position = take_position();
             self.player1.fleet.ships[current_ship]
                 .set_ship_position(BoardPosition(first_position, second_position));
 
