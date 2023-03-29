@@ -1,4 +1,4 @@
-pub struct Position(pub String, pub u8);
+pub struct Position(pub String, pub i8);
 
 pub struct BoardPosition(pub Position, pub Position);
 
@@ -12,13 +12,13 @@ pub enum ShipName {
 }
 
 pub struct Ship {
-    pub length: u8,
+    pub length: i8,
     pub position: BoardPosition,
     pub name: ShipName,
 }
 
 impl Ship {
-    pub fn new(length: u8, name: ShipName) -> Ship {
+    pub fn new(length: i8, name: ShipName) -> Ship {
         let position = BoardPosition(Position(String::new(), 0), Position(String::new(), 0));
         Ship {
             length,

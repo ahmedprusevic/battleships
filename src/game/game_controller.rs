@@ -3,6 +3,7 @@ use crate::game::fleet::{Fleet, FLEET_SIZE};
 use crate::game::player::Player;
 use crate::game::ship::{BoardPosition, Position, Ship, ShipName};
 
+use crate::utils::inputs::read_player_input;
 use std::io;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -69,7 +70,7 @@ impl GameController {
 }
 
 fn take_position() -> Position {
-    let mut player_input = String::new();
+    let mut player_input = read_player_input();
     io::stdin()
         .read_line(&mut player_input)
         .expect("Failed to read line!");
@@ -83,7 +84,7 @@ fn take_position() -> Position {
         .nth(1)
         .expect("Please enter one letter and at least one number eg: 'A1'");
 
-    let player_selected_number: u8;
+    let player_selected_number: i8;
 
     if player_input.graphemes(true).count() >= 4 {
         let second_number_part = player_input.chars().nth(2).unwrap();
@@ -94,7 +95,7 @@ fn take_position() -> Position {
         player_selected_number = first_number_part
             .to_digit(10)
             .expect("You haven't entered a valid number, please enter a valid number!")
-            as u8;
+            as i8;
     }
 
     Position(letter_part.to_string(), player_selected_number)

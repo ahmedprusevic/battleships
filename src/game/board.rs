@@ -2,6 +2,7 @@ use crate::game::error::ShipInputError;
 use crate::game::game_controller::CurrentPlayer;
 use crate::game::ship::{Position, Ship};
 use dialoguer::{theme::ColorfulTheme, Select};
+use std::collections::HashMap;
 
 const LETTERS: [&str; 14] = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
@@ -105,7 +106,7 @@ impl Board {
     pub fn calculate_available_positions(
         &self,
         position: &Position,
-        ship_length: u8,
+        ship_length: i8,
         current_player: &CurrentPlayer,
     ) {
         match current_player {
@@ -120,46 +121,60 @@ impl Board {
     }
 }
 
-fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position, ship_length: u8) {
+fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position, ship_length: i8) {
     let starting_point_letter_to_idx = LETTERS.iter().position(|&x| x == position.0).unwrap() as i8;
     let starting_point_num_to_idx = (position.1 - 1) as i8;
-    let mut available_placements = Vec::<String>::new();
+    let mut available_placements = HashMap::new();
 
-    available_placements.push(format!(
-        "{}{} - {}{}",
-        position.0,
-        position.1,
-        position.0,
-        position.1 + ship_length
-    ));
+    available_placements.insert(
+        0,
+        format!(
+            "{}{} - {}{}",
+            position.0,
+            position.1,
+            position.0,
+            position.1 + ship_length
+        ),
+    );
 
-    available_placements.push(format!(
-        "{}{} - {}{}",
-        position.0,
-        position.1,
-        position.0,
-        position.1 - ship_length
-    ));
+    available_placements.insert(
+        1,
+        format!(
+            "{}{} - {}{}",
+            position.0,
+            position.1,
+            position.0,
+            position.1 - ship_length
+        ),
+    );
 
-    available_placements.push(format!(
-        "{}{} - {}{}",
-        position.0,
-        position.1,
-        LETTERS
-            .get((starting_point_letter_to_idx - ship_length as i8) as usize)
-            .unwrap_or(&""),
-        position.1
-    ));
+    available_placements.insert(
+        2,
+        format!(
+            "{}{} - {}{}",
+            position.0,
+            position.1,
+            LETTERS
+                .get((starting_point_letter_to_idx + ship_length as i8) as usize)
+                .unwrap_or(&""),
+            position.1
+        ),
+    );
 
-    available_placements.push(format!(
-        "{}{} - {}{}",
-        position.0,
-        position.1,
-        LETTERS
-            .get((starting_point_letter_to_idx - ship_length as i8) as usize)
-            .unwrap_or(&""),
-        position.1
-    ));
+    available_placements.insert(
+        3,
+        format!(
+            "{}{} - {}{}",
+            position.0,
+            position.1,
+            LETTERS
+                .get((starting_point_letter_to_idx - ship_length as i8) as usize)
+                .unwrap_or(&""),
+            position.1
+        ),
+    );
+
+    println!("Array before iterations {:?}", available_placements);
 
     {
         //     x-axis positive
@@ -167,12 +182,12 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
         let possible_last_place = starting_point_num_to_idx + ship_length as i8;
 
         if possible_last_place > 14 {
-            available_placements.remove(0);
+            available_placements.remove(&0);
         }
 
         while (i <= possible_last_place) && (possible_last_place < 14) {
             if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
-                available_placements.remove(0);
+                available_placements.remove(&0);
                 break;
             }
             i += 1;
@@ -181,15 +196,15 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
     {
         //     x-axis negative
         let mut i = starting_point_num_to_idx.clone();
-        let possible_last_place: i8 = starting_point_num_to_idx - ship_length as i8;
+        let possible_last_place = starting_point_num_to_idx - ship_length as i8;
 
         if possible_last_place < 0 {
-            available_placements.remove(1);
+            available_placements.remove(&1);
         }
 
         while (i >= 0) && (possible_last_place >= 0) {
             if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
-                available_placements.remove(1);
+                available_placements.remove(&1);
                 break;
             }
             i -= 1;
@@ -201,12 +216,12 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
         let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
 
         if possible_last_place > 14 {
-            available_placements.remove(2);
+            available_placements.remove(&2);
         }
 
-        while (i <= possible_last_place) && (possible_last_place > 0) {
+        while (i <= possible_last_place) && (possible_last_place < 0) {
             if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
-                available_placements.remove(2);
+                available_placements.remove(&2);
                 break;
             }
             i += 1;
@@ -215,28 +230,33 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
     {
         //     y-axis negative
         let mut i = starting_point_letter_to_idx.clone();
-        let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
+        let possible_last_place = starting_point_letter_to_idx - ship_length as i8;
 
         if possible_last_place < 0 {
-            available_placements.remove(3);
+            available_placements.remove(&3);
         }
 
         while (i >= 0) && (possible_last_place >= 0) {
             if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
-                available_placements.remove(3);
+                available_placements.remove(&3);
                 break;
             }
             i -= 1;
         }
     }
 
+    let vector_of_available_values = Vec::from_iter(available_placements.values());
+
     let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&available_placements)
+        .items(&vector_of_available_values)
         .default(0)
         .interact()
         .unwrap();
 
-    println!("The selected field is {}", available_placements[selection])
+    println!(
+        "The selected field is {}",
+        vector_of_available_values[selection]
+    )
 }
 
 fn check_if_position_is_valid(
