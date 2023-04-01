@@ -3,7 +3,7 @@ use crate::game::fleet::{Fleet, FLEET_SIZE};
 use crate::game::player::Player;
 use crate::game::ship::{BoardPosition, Position, Ship, ShipName};
 
-use crate::utils::inputs::read_player_input;
+use crate::utils::inputs::{parse_input, read_player_input};
 use std::io;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -38,15 +38,21 @@ impl GameController {
             println!("Please enter a ship 🚢 position please take note that you are currently placing {:?} , who has length of {}", self.player1.fleet.ships[current_ship].name, self.player1.fleet.ships[current_ship].length);
 
             let first_position = take_position();
-            self.board.calculate_available_positions(
-                &first_position,
-                self.player1.fleet.ships[current_ship].length,
-                &self.current_player,
-            );
+            let second_position_result =
+                self.board.calculate_available_positions_and_take_position(
+                    &first_position,
+                    &self.player1.fleet.ships[current_ship].length,
+                    &self.current_player,
+                );
 
-            let second_position = take_position();
-            self.player1.fleet.ships[current_ship]
-                .set_ship_position(BoardPosition(first_position, second_position));
+            match second_position_result {
+                Ok(second_position) => self.player1.fleet.ships[current_ship]
+                    .set_ship_position(BoardPosition(first_position, second_position)),
+                Err(e) => {
+                    println!("{}", e);
+                    continue;
+                }
+            };
 
             let is_ship_placed = self
                 .board
@@ -55,10 +61,7 @@ impl GameController {
             match is_ship_placed {
                 Ok(_) => self.board.display_board(),
                 Err(e) => {
-                    println!(
-                        "Failed to place ship on board because of following error: {}",
-                        e
-                    );
+                    println!("{}", e);
                     println!("Please enter correct position");
                     continue;
                 }
@@ -70,33 +73,8 @@ impl GameController {
 }
 
 fn take_position() -> Position {
-    let mut player_input = read_player_input();
-    io::stdin()
-        .read_line(&mut player_input)
-        .expect("Failed to read line!");
+    let player_input = read_player_input();
+    let position = parse_input(player_input).expect("Please enter a valid input eg. A1");
 
-    let letter_part = player_input
-        .chars()
-        .nth(0)
-        .expect("Please enter one letter and at least one number eg: 'A1'");
-    let first_number_part = player_input
-        .chars()
-        .nth(1)
-        .expect("Please enter one letter and at least one number eg: 'A1'");
-
-    let player_selected_number: i8;
-
-    if player_input.graphemes(true).count() >= 4 {
-        let second_number_part = player_input.chars().nth(2).unwrap();
-        player_selected_number = format!("{}{}", first_number_part, second_number_part)
-            .parse()
-            .expect("You haven't entered a valid number, please enter a valid number!");
-    } else {
-        player_selected_number = first_number_part
-            .to_digit(10)
-            .expect("You haven't entered a valid number, please enter a valid number!")
-            as i8;
-    }
-
-    Position(letter_part.to_string(), player_selected_number)
+    Position(position.0, position.1)
 }

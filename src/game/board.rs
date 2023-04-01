@@ -103,25 +103,29 @@ impl Board {
         Ok(())
     }
 
-    pub fn calculate_available_positions(
+    pub fn calculate_available_positions_and_take_position(
         &self,
         position: &Position,
-        ship_length: i8,
+        ship_length: &i8,
         current_player: &CurrentPlayer,
-    ) {
+    ) -> Result<Position, ShipInputError> {
         match current_player {
             CurrentPlayer(1) => {
-                display_available_fields(&self.player_1_fields, position, ship_length)
+                take_second_position(&self.player_1_fields, position, *ship_length - 1)
             }
             CurrentPlayer(2) => {
-                display_available_fields(&self.player_2_fields, position, ship_length)
+                take_second_position(&self.player_2_fields, position, *ship_length - 1)
             }
             _ => unreachable!(),
         }
     }
 }
 
-fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position, ship_length: i8) {
+fn take_second_position(
+    fields: &[[BoardState; 14]; 14],
+    position: &Position,
+    ship_length: i8,
+) -> Result<Position, ShipInputError> {
     let starting_point_letter_to_idx = LETTERS.iter().position(|&x| x == position.0).unwrap() as i8;
     let starting_point_num_to_idx = (position.1 - 1) as i8;
     let mut available_placements = HashMap::new();
@@ -155,7 +159,7 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
             position.0,
             position.1,
             LETTERS
-                .get((starting_point_letter_to_idx + ship_length as i8) as usize)
+                .get((starting_point_letter_to_idx + ship_length) as usize)
                 .unwrap_or(&""),
             position.1
         ),
@@ -168,13 +172,13 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
             position.0,
             position.1,
             LETTERS
-                .get((starting_point_letter_to_idx - ship_length as i8) as usize)
+                .get((starting_point_letter_to_idx - ship_length) as usize)
                 .unwrap_or(&""),
             position.1
         ),
     );
 
-    println!("Array before iterations {:?}", available_placements);
+    println!("Before format {:?}", available_placements);
 
     {
         //     x-axis positive
@@ -212,15 +216,19 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
     }
     {
         //     y-axis positive
-        let mut i = starting_point_letter_to_idx.clone();
+        let mut i = starting_point_num_to_idx.clone();
         let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
 
         if possible_last_place > 14 {
             available_placements.remove(&2);
         }
 
-        while (i <= possible_last_place) && (possible_last_place < 0) {
-            if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
+        while (i <= possible_last_place) && (possible_last_place < 14) {
+            if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
+                println!(
+                    "Starring point and possile last place {} {}",
+                    i, possible_last_place
+                );
                 available_placements.remove(&2);
                 break;
             }
@@ -229,7 +237,7 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
     }
     {
         //     y-axis negative
-        let mut i = starting_point_letter_to_idx.clone();
+        let mut i = starting_point_num_to_idx.clone();
         let possible_last_place = starting_point_letter_to_idx - ship_length as i8;
 
         if possible_last_place < 0 {
@@ -247,16 +255,31 @@ fn display_available_fields(fields: &[[BoardState; 14]; 14], position: &Position
 
     let vector_of_available_values = Vec::from_iter(available_placements.values());
 
+    if vector_of_available_values.len() == 0 {
+        return Err(ShipInputError::NoFreeFields);
+    }
+
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(&vector_of_available_values)
         .default(0)
         .interact()
         .unwrap();
 
-    println!(
-        "The selected field is {}",
-        vector_of_available_values[selection]
-    )
+    let selected_position_pair: &String = vector_of_available_values[selection];
+
+    let letter_part = selected_position_pair
+        .chars()
+        .nth(selected_position_pair.len() - 2)
+        .unwrap()
+        .to_string();
+    let number_part = selected_position_pair
+        .chars()
+        .nth(selected_position_pair.len() - 1)
+        .unwrap()
+        .to_digit(10)
+        .unwrap();
+
+    Ok(Position(letter_part, number_part as i8))
 }
 
 fn check_if_position_is_valid(

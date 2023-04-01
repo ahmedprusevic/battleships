@@ -9,5 +9,8 @@ quick_error! {
         ShipInPath {
             display("There is ship in specified path")
         }
+        NoFreeFields {
+            display("There is no free fields eiter ship is on the way or all fields are out of bounds")
+        }
     }
 }
