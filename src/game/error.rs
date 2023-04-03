@@ -12,5 +12,8 @@ quick_error! {
         NoFreeFields {
             display("There is no free fields eiter ship is on the way or all fields are out of bounds")
         }
+        SameFieldError {
+            display("The fields are same")
+        }
     }
 }

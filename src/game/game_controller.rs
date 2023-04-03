@@ -46,8 +46,15 @@ impl GameController {
                 );
 
             match second_position_result {
-                Ok(second_position) => self.player1.fleet.ships[current_ship]
-                    .set_ship_position(BoardPosition(first_position, second_position)),
+                Ok(second_position) => {
+                    if first_position.1 > second_position.1 {
+                        self.player1.fleet.ships[current_ship]
+                            .set_ship_position(BoardPosition(first_position, second_position))
+                    } else {
+                        self.player1.fleet.ships[current_ship]
+                            .set_ship_position(BoardPosition(second_position, first_position))
+                    }
+                }
                 Err(e) => {
                     println!("{}", e);
                     continue;

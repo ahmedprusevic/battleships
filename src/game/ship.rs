@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Position(pub String, pub i8);
 
 pub struct BoardPosition(pub Position, pub Position);

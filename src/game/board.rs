@@ -1,6 +1,7 @@
 use crate::game::error::ShipInputError;
 use crate::game::game_controller::CurrentPlayer;
 use crate::game::ship::{Position, Ship};
+use crate::utils::conversions::convert_string_to_number;
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::collections::HashMap;
 
@@ -178,8 +179,6 @@ fn take_second_position(
         ),
     );
 
-    println!("Before format {:?}", available_placements);
-
     {
         //     x-axis positive
         let mut i = starting_point_num_to_idx.clone();
@@ -267,27 +266,24 @@ fn take_second_position(
 
     let selected_position_pair: &String = vector_of_available_values[selection];
 
-    let letter_part = selected_position_pair
-        .chars()
-        .nth(selected_position_pair.len() - 2)
-        .unwrap()
-        .to_string();
-    let number_part = selected_position_pair
-        .chars()
-        .nth(selected_position_pair.len() - 1)
-        .unwrap()
-        .to_digit(10)
-        .unwrap();
+    let position_tuple = convert_string_to_number(selected_position_pair);
 
-    Ok(Position(letter_part, number_part as i8))
+    Ok(Position(
+        position_tuple.1.to_string(),
+        position_tuple.0 as i8,
+    ))
 }
 
 fn check_if_position_is_valid(
     position1: &Position,
     position2: &Position,
 ) -> Result<(), ShipInputError> {
+    println!(
+        "Position letters {:?} , position numbers {:?}",
+        position1, position2
+    );
     match (position1.0 == position2.0, position1.1 == position2.1) {
         (true, false) | (false, true) => Ok(()),
-        _ => Err(ShipInputError::InvalidInput),
+        _ => Err(ShipInputError::SameFieldError),
     }
 }
