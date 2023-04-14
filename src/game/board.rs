@@ -79,8 +79,13 @@ impl Board {
             starting_point_num_to_idx == end_point_num_to_idx,
         ) {
             (true, false) => {
-                let mut placing_idx = starting_point_num_to_idx as usize;
+                let mut placing_idx = if starting_point_num_to_idx > end_point_num_to_idx {
+                    end_point_num_to_idx as usize
+                } else {
+                    starting_point_num_to_idx as usize
+                };
                 let mut step_num = 1;
+
                 while step_num <= ship.length as usize {
                     self.player_1_fields[starting_point_letter_to_idx][placing_idx] =
                         BoardState::Ship;
@@ -89,7 +94,11 @@ impl Board {
                 }
             }
             (false, true) => {
-                let mut placing_idx = starting_point_letter_to_idx;
+                let mut placing_idx = if starting_point_letter_to_idx > end_point_letter_to_idx {
+                    end_point_letter_to_idx
+                } else {
+                    starting_point_letter_to_idx
+                };
                 let mut step_num = 1;
                 while step_num <= ship.length as usize {
                     self.player_1_fields[placing_idx][starting_point_num_to_idx as usize] =
@@ -179,12 +188,14 @@ fn take_second_position(
         ),
     );
 
+    println!("Availible placements {:#?}", available_placements);
+
     {
         //     x-axis positive
         let mut i = starting_point_num_to_idx.clone();
         let possible_last_place = starting_point_num_to_idx + ship_length as i8;
 
-        if possible_last_place > 14 {
+        if possible_last_place > 13 {
             available_placements.remove(&0);
         }
 
@@ -205,7 +216,7 @@ fn take_second_position(
             available_placements.remove(&1);
         }
 
-        while (i >= 0) && (possible_last_place >= 0) {
+        while (i >= possible_last_place) && (possible_last_place >= 0) {
             if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
                 available_placements.remove(&1);
                 break;
@@ -215,19 +226,17 @@ fn take_second_position(
     }
     {
         //     y-axis positive
-        let mut i = starting_point_num_to_idx.clone();
+        let mut i = starting_point_letter_to_idx.clone();
         let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
 
-        if possible_last_place > 14 {
+        println!("i {} possible last {}", i, possible_last_place);
+
+        if possible_last_place > 13 {
             available_placements.remove(&2);
         }
 
         while (i <= possible_last_place) && (possible_last_place < 14) {
-            if fields[starting_point_letter_to_idx as usize][i as usize] != BoardState::Free {
-                println!(
-                    "Starring point and possile last place {} {}",
-                    i, possible_last_place
-                );
+            if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
                 available_placements.remove(&2);
                 break;
             }
@@ -236,14 +245,14 @@ fn take_second_position(
     }
     {
         //     y-axis negative
-        let mut i = starting_point_num_to_idx.clone();
+        let mut i = starting_point_letter_to_idx.clone();
         let possible_last_place = starting_point_letter_to_idx - ship_length as i8;
 
         if possible_last_place < 0 {
             available_placements.remove(&3);
         }
 
-        while (i >= 0) && (possible_last_place >= 0) {
+        while (i >= possible_last_place) && (possible_last_place >= 0) {
             if fields[i as usize][starting_point_num_to_idx as usize] != BoardState::Free {
                 available_placements.remove(&3);
                 break;
