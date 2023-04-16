@@ -61,7 +61,69 @@ impl Board {
         }
     }
 
-    pub fn place_ship_on_board(&mut self, ship: &Ship) -> Result<(), ShipInputError> {
+    pub fn check_shot(
+        &mut self,
+        position: Position,
+        current_player: &CurrentPlayer,
+    ) -> Result<BoardState, ShipInputError> {
+        let position_letter_to_idx = LETTERS.iter().position(|&x| x == position.0).unwrap();
+        let position_num_to_idx = position.1 - 1;
+
+        let field = &mut self.get_fields_based_on_current_player(current_player)
+            [position_letter_to_idx][position_num_to_idx as usize];
+
+        match *field {
+            BoardState::Free => {
+                self.set_field(
+                    current_player,
+                    position_letter_to_idx,
+                    position_num_to_idx as usize,
+                    BoardState::Miss,
+                );
+                Ok(BoardState::Miss)
+            }
+            BoardState::Miss => Err(ShipInputError::AlreadyShotError),
+            BoardState::Ship => {
+                self.set_field(
+                    current_player,
+                    position_letter_to_idx,
+                    position_num_to_idx as usize,
+                    BoardState::Shot,
+                );
+                Ok(BoardState::Shot)
+            }
+            BoardState::Shot => Err(ShipInputError::AlreadyShotError),
+        }
+    }
+
+    fn set_field(
+        &mut self,
+        current_player: &CurrentPlayer,
+        letter_idx: usize,
+        num_idx: usize,
+        state: BoardState,
+    ) {
+        match current_player {
+            CurrentPlayer::One => self.player_1_fields[letter_idx][num_idx] = state,
+            CurrentPlayer::Two => self.player_2_fields[letter_idx][num_idx] = state,
+        }
+    }
+
+    fn get_fields_based_on_current_player(
+        &self,
+        current_player: &CurrentPlayer,
+    ) -> [[BoardState; 14]; 14] {
+        match current_player {
+            CurrentPlayer::One => self.player_1_fields,
+            CurrentPlayer::Two => self.player_2_fields,
+        }
+    }
+
+    pub fn place_ship_on_board(
+        &mut self,
+        ship: &Ship,
+        current_player: &CurrentPlayer,
+    ) -> Result<(), ShipInputError> {
         let starting_point = &ship.position.0;
         let end_point = &ship.position.1;
 
@@ -87,8 +149,9 @@ impl Board {
                 let mut step_num = 1;
 
                 while step_num <= ship.length as usize {
-                    self.player_1_fields[starting_point_letter_to_idx][placing_idx] =
-                        BoardState::Ship;
+                    self.get_fields_based_on_current_player(current_player)
+                        [starting_point_letter_to_idx][placing_idx] = BoardState::Ship;
+
                     placing_idx += 1;
                     step_num += 1;
                 }
@@ -101,8 +164,17 @@ impl Board {
                 };
                 let mut step_num = 1;
                 while step_num <= ship.length as usize {
-                    self.player_1_fields[placing_idx][starting_point_num_to_idx as usize] =
-                        BoardState::Ship;
+                    match current_player {
+                        CurrentPlayer::One => {
+                            self.player_1_fields[placing_idx][starting_point_num_to_idx as usize] =
+                                BoardState::Ship
+                        }
+                        CurrentPlayer::Two => {
+                            self.player_2_fields[placing_idx][starting_point_num_to_idx as usize] =
+                                BoardState::Ship
+                        }
+                    }
+
                     placing_idx += 1;
                     step_num += 1;
                 }
@@ -116,17 +188,16 @@ impl Board {
     pub fn calculate_available_positions_and_take_position(
         &self,
         position: &Position,
-        ship_length: &i8,
+        ship_length: i8,
         current_player: &CurrentPlayer,
     ) -> Result<Position, ShipInputError> {
         match current_player {
-            CurrentPlayer(1) => {
-                take_second_position(&self.player_1_fields, position, *ship_length - 1)
+            CurrentPlayer::One => {
+                take_second_position(&self.player_1_fields, position, ship_length - 1)
             }
-            CurrentPlayer(2) => {
-                take_second_position(&self.player_2_fields, position, *ship_length - 1)
+            CurrentPlayer::Two => {
+                take_second_position(&self.player_2_fields, position, ship_length - 1)
             }
-            _ => unreachable!(),
         }
     }
 }
@@ -188,8 +259,6 @@ fn take_second_position(
         ),
     );
 
-    println!("Availible placements {:#?}", available_placements);
-
     {
         //     x-axis positive
         let mut i = starting_point_num_to_idx.clone();
@@ -228,8 +297,6 @@ fn take_second_position(
         //     y-axis positive
         let mut i = starting_point_letter_to_idx.clone();
         let possible_last_place = starting_point_letter_to_idx + ship_length as i8;
-
-        println!("i {} possible last {}", i, possible_last_place);
 
         if possible_last_place > 13 {
             available_placements.remove(&2);

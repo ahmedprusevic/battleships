@@ -15,5 +15,8 @@ quick_error! {
         SameFieldError {
             display("The fields are same")
         }
+        AlreadyShotError {
+            display("You've already shot at this field")
+        }
     }
 }

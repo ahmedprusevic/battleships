@@ -18,4 +18,7 @@ impl Fleet {
 
         Fleet { ships: fleet }
     }
+    pub fn get_fleet_size(&self) -> i8 {
+        self.ships.iter().map(|ship| ship.length).sum()
+    }
 }
